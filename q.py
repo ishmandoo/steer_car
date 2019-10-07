@@ -27,7 +27,6 @@ class SQN(nn.Module):
 def reward(state):
     x, y, theta = state
     pos = np.array([x,y])
-    print(pos)
     dist = np.linalg.norm(pos-target)
     '''
     if dist < 1.:
@@ -52,10 +51,15 @@ for ep in range(1000):
         old_state = torch.tensor(car.state)
                 
         if random.random() > 100./(ep+1):
+        #if random.random() > epsilon:
             with torch.no_grad():        
                 action_index = torch.argmax(network.forward(old_state))
         else:
             action_index = random.randint(0,8)
+        
+        x, y, theta = old_state
+
+        print("x {x}\ny {y}\ntheta {theta}\naction {a}\nep {ep}".format(x=x, y=y, theta=theta, a=[(action_index//3) - 1, (action_index%3) -1], ep=100./(ep+1)))
 
         car.step(np.array([(action_index//3) - 1, (action_index%3) -1]))
 
@@ -68,7 +72,6 @@ for ep in range(1000):
             next_q = torch.max(network.forward(torch.tensor(car.state)))
 
         loss = (network.forward(old_state)[action_index] - reward(old_state) + discount * next_q)**2
-        print(reward(old_state))
         loss.backward()
         optimizer.step()
 
